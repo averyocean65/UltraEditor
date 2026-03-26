@@ -385,6 +385,15 @@ public class EditorManager : MonoBehaviour
         }
     }
 
+    private void MakeCustomButton(Transform preset, Transform parent, string title, UnityAction onClick) {
+        Transform newChild = Instantiate(preset, parent, true);
+        Button button = newChild.GetComponent<Button>();
+        TextMeshProUGUI tmpText = newChild.GetComponentInChildren<TextMeshProUGUI>();
+        tmpText.text = title;
+        
+        button.onClick.AddListener(onClick);
+    }
+
     void SetupButtons()
     {
         Transform buttons = editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1);
@@ -485,6 +494,27 @@ public class EditorManager : MonoBehaviour
         addB.GetChild(7).GetComponent<Button>().onClick.AddListener(() =>
         {
             TryToGroupName();
+        });
+
+        MakeCustomButton(addB.GetChild(1), addB.transform, "Empty", () => {
+            GameObject emptyObj = new GameObject("Empty Object");
+            emptyObj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
+            emptyObj.layer = 0;
+            emptyObj.transform.localScale = Vector3.one;
+            EmptyObject e = emptyObj.AddComponent<EmptyObject>();
+            e.Create();
+
+            if (Input.GetKey(Plugin.ShiftKey) && cameraSelector.selectedObject != null)
+            {
+                emptyObj.transform.SetParent(cameraSelector.selectedObject.transform);
+                lastSelected = null;
+            }
+            else
+                cameraSelector.SelectObject(emptyObj);
+
+            if (Input.GetKey(Plugin.AltKey)) emptyObj.SetActive(false);
+
+            AddToUndo(new CreateAction(emptyObj));
         });
 
         // View
